@@ -8,7 +8,7 @@ import java.util.UUID;
 public class Main {
     public static void main(String[] args) {
 
-        ParkingLot parkingLot = new ParkingLot();
+        ParkingLot parkingLot = ParkingLot.getInstance();
 
 
         for(int i=0;i<120;i++){
