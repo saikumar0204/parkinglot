@@ -1,6 +1,7 @@
 package com.practice;
 
-import java.util.ArrayList;
+import com.practice.ticket.Ticket;
+import java.util.UUID;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Map;
 public class ParkingLot {
     private static ParkingLot instance;
     Map<VehicleType, List<ParkingSlot>> parkingSlotsMap;
-    Map<Vehicle, ParkingSlot> vehicleSlotMap;
+    Map<Vehicle, Ticket> vehicleTicketMap;
     SlotAllocationStrategy slotAllocationStrategy;
 
     /**
@@ -20,7 +21,7 @@ public class ParkingLot {
      */
     private ParkingLot() {
         parkingSlotsMap = new HashMap<>();
-        vehicleSlotMap = new HashMap<>();
+        vehicleTicketMap = new HashMap<>();
         slotAllocationStrategy = new DefaultSlotAllocationStrategy();
         List<ParkingSlot> slots = ParkingSlotFactory.createSlots(VehicleType.TWO_WHEELER, 100);
         parkingSlotsMap.put(VehicleType.TWO_WHEELER, slots);
@@ -41,7 +42,7 @@ public class ParkingLot {
     }
 
     /**
-     * Parks a vehicle using the slot allocation strategy.
+     * Parks a vehicle using the slot allocation strategy and creates a ticket.
      * @param vehicle Vehicle to park
      * @return true if parked, false otherwise
      */
@@ -51,7 +52,8 @@ public class ParkingLot {
         if (slot != null && slot.isAvailable) {
             boolean isParked = slot.parkVehicle(vehicle);
             if (isParked) {
-                vehicleSlotMap.put(vehicle, slot);
+                Ticket ticket = new Ticket(UUID.randomUUID().toString(), vehicle, slot, System.currentTimeMillis());
+                vehicleTicketMap.put(vehicle, ticket);
                 return true;
             }
         }
@@ -60,19 +62,28 @@ public class ParkingLot {
     }
 
     /**
-     * Unparks a vehicle.
+     * Unparks a vehicle and closes the ticket.
      * @param vehicle Vehicle to unpark
      * @return true if unparked, false otherwise
      */
     public boolean unparkVehicle(Vehicle vehicle) {
-        ParkingSlot slot = vehicleSlotMap.get(vehicle);
-        if (slot == null) {
+        Ticket ticket = vehicleTicketMap.get(vehicle);
+        if (ticket == null) {
             System.out.println(String.format("This vehicle is not yet parked: %s", vehicle.getVehicleType()));
             return false;
         }
+        ParkingSlot slot = ticket.slot;
         slot.unParkVehicle();
-        vehicleSlotMap.remove(vehicle);
+        ticket.printTicket();
+        vehicleTicketMap.remove(vehicle);
         return true;
+    }
+
+    /**
+     * Gets the ticket for a parked vehicle.
+     */
+    public Ticket getTicket(Vehicle vehicle) {
+        return vehicleTicketMap.get(vehicle);
     }
 
     /**
